@@ -1,151 +1,201 @@
--- Universal Flera UI Library
 local Flera = {}
 
--- Services
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
--- Safe GUI Creation for Executors
-local function CreateScreenGui()
-    local gui = Instance.new("ScreenGui")
-    gui.ResetOnSpawn = false
-    gui.Enabled = true
-    gui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
-    return gui
-end
-
--- Utility Functions
-local function CreateInstance(className, properties)
-    local instance = Instance.new(className)
-    for property, value in pairs(properties) do
-        instance[property] = value
-    end
-    return instance
-end
-
-local function ApplyRoundCorners(instance, cornerRadius)
-    CreateInstance("UICorner", {
-        CornerRadius = UDim.new(cornerRadius, 0),
-        Parent = instance
-    })
-end
-
--- Fade Animation
-local function FadeIn(instance)
-    instance.Visible = true
-    TweenService:Create(instance, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        BackgroundTransparency = 0.2
-    }):Play()
-end
-
-local function FadeOut(instance, callback)
-    local tween = TweenService:Create(instance, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        BackgroundTransparency = 1
-    })
-    tween:Play()
-    tween.Completed:Connect(function()
-        instance.Visible = false
-        if callback then callback() end
-    end)
-end
-
--- Create Window
 function Flera:CreateWindow(options)
     local window = {}
-    options = options or {}
-    local title = options.Title or "Flera UI"
+    local sections = {}
+    local workareas = {}
+    local notifs = {}
+    local visible = true
+    local dbcooper = false
 
-    -- Create GUI
-    local screenGui = CreateScreenGui()
+    local function tween(instance, position, duration)
+        game:GetService("TweenService"):Create(instance, TweenInfo.new(duration, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {Position = position}):Play()
+    end
 
-    -- Main Frame
-    local mainFrame = CreateInstance("Frame", {
-        Size = UDim2.new(0, 400, 0, 500),
-        Position = UDim2.new(0.5, -200, 0.5, -250),
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-        BackgroundTransparency = 0.2,
-        Visible = true,
-        Parent = screenGui
-    })
-    ApplyRoundCorners(mainFrame, 0.1)
+    -- Create the main window
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = game:GetService("CoreGui")
 
-    -- Title Bar
-    local titleBar = CreateInstance("Frame", {
-        Size = UDim2.new(1, 0, 0, 30),
-        BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-        Parent = mainFrame
-    })
-    ApplyRoundCorners(titleBar, 0.1)
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Parent = screenGui
+    mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    mainFrame.BackgroundTransparency = 0.15
+    mainFrame.Position = UDim2.new(0.5, 0, 2, 0)
+    mainFrame.Size = UDim2.new(0, 721, 0, 584)
 
-    -- Title Text
-    local titleLabel = CreateInstance("TextLabel", {
-        Text = title,
-        Size = UDim2.new(1, -60, 1, 0),
-        Position = UDim2.new(0, 5, 0, 0),
-        BackgroundTransparency = 1,
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        Font = Enum.Font.SourceSansBold,
-        TextSize = 18,
-        Parent = titleBar
-    })
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 18)
+    corner.Parent = mainFrame
 
-    -- Close Button
-    local closeButton = CreateInstance("TextButton", {
-        Text = "X",
-        Size = UDim2.new(0, 25, 0, 25),
-        Position = UDim2.new(1, -30, 0.5, -12.5),
-        BackgroundColor3 = Color3.fromRGB(255, 50, 50),
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        Font = Enum.Font.SourceSansBold,
-        Parent = titleBar
-    })
-    ApplyRoundCorners(closeButton, 0.5)
+    -- Dragging functionality
+    local UserInputService = game:GetService("UserInputService")
+    local dragging, dragInput, dragStart, startPos
 
-    -- Close UI Functionality
-    closeButton.MouseButton1Click:Connect(function()
-        FadeOut(mainFrame, function()
-            screenGui.Enabled = false
-        end)
-    end)
+    mainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
 
-    -- Show UI with Left Shift
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.LeftShift then
-            screenGui.Enabled = not screenGui.Enabled
-            if screenGui.Enabled then
-                FadeIn(mainFrame)
-            end
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
         end
     end)
 
-    -- Ensure UI is visible
-    FadeIn(mainFrame)
+    mainFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
 
-    function window:AddTab(name)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- Workarea setup
+    local workarea = Instance.new("Frame")
+    workarea.Name = "Workarea"
+    workarea.Parent = mainFrame
+    workarea.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    workarea.Position = UDim2.new(0.364, 0, 0, 0)
+    workarea.Size = UDim2.new(0, 458, 0, 584)
+
+    local workareaCorner = Instance.new("UICorner")
+    workareaCorner.CornerRadius = UDim.new(0, 18)
+    workareaCorner.Parent = workarea
+
+    -- Sidebar setup
+    local sidebar = Instance.new("ScrollingFrame")
+    sidebar.Name = "Sidebar"
+    sidebar.Parent = mainFrame
+    sidebar.BackgroundTransparency = 1
+    sidebar.Position = UDim2.new(0.025, 0, 0.182, 0)
+    sidebar.Size = UDim2.new(0, 233, 0, 463)
+    sidebar.AutomaticCanvasSize = "Y"
+    sidebar.ScrollBarThickness = 2
+
+    local sidebarLayout = Instance.new("UIListLayout")
+    sidebarLayout.Parent = sidebar
+    sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    sidebarLayout.Padding = UDim.new(0, 5)
+
+    -- Title
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Parent = mainFrame
+    title.BackgroundTransparency = 1
+    title.Position = UDim2.new(0.389, 0, 0.035, 0)
+    title.Size = UDim2.new(0, 400, 0, 15)
+    title.Font = Enum.Font.Gotham
+    title.TextColor3 = Color3.fromRGB(0, 0, 0)
+    title.TextSize = 28
+    title.Text = options.Title or "Flera Window"
+
+    -- Toggle visibility
+    function window:ToggleVisibility()
+        if dbcooper then return end
+        visible = not visible
+        dbcooper = true
+        if visible then
+            tween(mainFrame, UDim2.new(0.5, 0, 0.5, 0), 0.5)
+        else
+            tween(mainFrame, mainFrame.Position + UDim2.new(0, 0, 2, 0), 0.5)
+        end
+        task.wait(0.5)
+        dbcooper = false
+    end
+
+    -- Create a tab
+    function window:CreateTab(name)
         local tab = {}
+        local tabButton = Instance.new("TextButton")
+        tabButton.Name = "TabButton"
+        tabButton.Parent = sidebar
+        tabButton.BackgroundColor3 = Color3.fromRGB(21, 103, 251)
+        tabButton.BackgroundTransparency = 1
+        tabButton.Size = UDim2.new(0, 226, 0, 37)
+        tabButton.Font = Enum.Font.Gotham
+        tabButton.Text = name
+        tabButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+        tabButton.TextSize = 21
+
+        local tabCorner = Instance.new("UICorner")
+        tabCorner.CornerRadius = UDim.new(0, 9)
+        tabCorner.Parent = tabButton
+
+        local workareaFrame = Instance.new("ScrollingFrame")
+        workareaFrame.Name = "WorkareaFrame"
+        workareaFrame.Parent = workarea
+        workareaFrame.BackgroundTransparency = 1
+        workareaFrame.Position = UDim2.new(0.039, 0, 0.096, 0)
+        workareaFrame.Size = UDim2.new(0, 422, 0, 512)
+        workareaFrame.Visible = false
+        workareaFrame.AutomaticCanvasSize = "Y"
+        workareaFrame.ScrollBarThickness = 2
+
+        local workareaLayout = Instance.new("UIListLayout")
+        workareaLayout.Parent = workareaFrame
+        workareaLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        workareaLayout.Padding = UDim.new(0, 5)
+
+        table.insert(sections, tabButton)
+        table.insert(workareas, workareaFrame)
+
+        function tab:Select()
+            for _, v in pairs(sections) do
+                v.BackgroundTransparency = 1
+                v.TextColor3 = Color3.fromRGB(0, 0, 0)
+            end
+            tabButton.BackgroundTransparency = 0
+            tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            for _, v in pairs(workareas) do
+                v.Visible = false
+            end
+            workareaFrame.Visible = true
+        end
+
+        tabButton.MouseButton1Click:Connect(function()
+            tab:Select()
+        end)
+
+        -- Create a button
+        function tab:CreateButton(name, callback)
+            local button = Instance.new("TextButton")
+            button.Name = "Button"
+            button.Parent = workareaFrame
+            button.BackgroundColor3 = Color3.fromRGB(216, 216, 216)
+            button.BackgroundTransparency = 1
+            button.Size = UDim2.new(0, 418, 0, 37)
+            button.Font = Enum.Font.Gotham
+            button.Text = name
+            button.TextColor3 = Color3.fromRGB(21, 103, 251)
+            button.TextSize = 21
+
+            local buttonCorner = Instance.new("UICorner")
+            buttonCorner.CornerRadius = UDim.new(0, 9)
+            buttonCorner.Parent = button
+
+            local stroke = Instance.new("UIStroke")
+            stroke.Parent = button
+            stroke.Color = Color3.fromRGB(21, 103, 251)
+            stroke.Thickness = 1
+
+            if callback then
+                button.MouseButton1Click:Connect(function()
+                    callback()
+                end)
+            end
+        end
+
         return tab
-    end
-
-    function window:AddButton(text, callback)
-        local button = CreateInstance("TextButton", {
-            Text = text,
-            Size = UDim2.new(0.9, 0, 0, 40),
-            Position = UDim2.new(0.05, 0, 0, (#mainFrame:GetChildren() - 1) * 45),
-            BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-            TextColor3 = Color3.fromRGB(255, 255, 255),
-            Font = Enum.Font.SourceSansBold,
-            Parent = mainFrame
-        })
-        ApplyRoundCorners(button, 0.2)
-
-        button.MouseButton1Click:Connect(callback)
-    end
-
-    function window:AddSlider(text, min, max, callback)
-        local slider = {}
-        return slider
     end
 
     return window
