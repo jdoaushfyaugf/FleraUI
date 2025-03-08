@@ -1,13 +1,10 @@
--- Flera UI Library (Universal Compatibility)
 local Flera = {}
 
--- Services
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 
--- Utility Functions
 local function CreateInstance(className, properties)
     local instance = Instance.new(className)
     for property, value in pairs(properties) do
@@ -23,7 +20,6 @@ local function ApplyRoundCorners(instance, cornerRadius)
     })
 end
 
--- Fade Animation
 local function FadeIn(instance)
     instance.Visible = true
     local tween = TweenService:Create(instance, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -42,22 +38,19 @@ local function FadeOut(instance, callback)
         if callback then
             callback()
         end
-    end)
+    })
 end
 
--- Main Window Function
 function Flera:CreateWindow(options)
     local window = {}
     options = options or {}
     local title = options.Title or "Flera UI"
     local imageId = options.ImageId
 
-    -- Create ScreenGui
     local screenGui = CreateInstance("ScreenGui", {
         Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     })
 
-    -- Create Main Frame
     local mainFrame = CreateInstance("Frame", {
         Size = UDim2.new(0, 400, 0, 500),
         Position = UDim2.new(0.5, -200, 0.5, -250),
@@ -69,7 +62,6 @@ function Flera:CreateWindow(options)
     })
     ApplyRoundCorners(mainFrame, 0.1)
 
-    -- Title Bar
     local titleBar = CreateInstance("Frame", {
         Size = UDim2.new(1, 0, 0, 30),
         BackgroundColor3 = Color3.fromRGB(20, 20, 20),
@@ -89,7 +81,6 @@ function Flera:CreateWindow(options)
         Parent = titleBar
     })
 
-    -- Minify Button
     local minifyButton = CreateInstance("TextButton", {
         Text = "-",
         Size = UDim2.new(0, 25, 0, 25),
@@ -102,7 +93,6 @@ function Flera:CreateWindow(options)
     })
     ApplyRoundCorners(minifyButton, 0.5)
 
-    -- Close Button
     local closeButton = CreateInstance("TextButton", {
         Text = "X",
         Size = UDim2.new(0, 25, 0, 25),
@@ -115,7 +105,6 @@ function Flera:CreateWindow(options)
     })
     ApplyRoundCorners(closeButton, 0.5)
 
-    -- Image (Optional)
     if imageId and type(imageId) == "string" then
         local image = CreateInstance("ImageLabel", {
             Size = UDim2.new(1, 0, 0, 100),
@@ -127,7 +116,6 @@ function Flera:CreateWindow(options)
         ApplyRoundCorners(image, 0.1)
     end
 
-    -- Tab Container
     local tabContainer = CreateInstance("Frame", {
         Size = UDim2.new(1, 0, 1, -40),
         Position = UDim2.new(0, 0, 0, imageId and 130 or 40),
@@ -135,10 +123,8 @@ function Flera:CreateWindow(options)
         Parent = mainFrame
     })
 
-    -- Tab Buttons
     local tabButtons = {}
 
-    -- Draggable Window
     local dragging = false
     local dragStartPos
     local startPos
@@ -164,7 +150,6 @@ function Flera:CreateWindow(options)
         end
     end)
 
-    -- Minify/Close Functionality
     local isMinified = false
     local originalSize = mainFrame.Size
 
@@ -185,7 +170,6 @@ function Flera:CreateWindow(options)
         end)
     end)
 
-    -- Reopen UI with Left Shift
     UserInputService.InputBegan:Connect(function(input)
         if input.KeyCode == Enum.KeyCode.LeftShift then
             screenGui.Enabled = true
@@ -193,7 +177,6 @@ function Flera:CreateWindow(options)
         end
     end)
 
-    -- Initial Fade In
     FadeIn(mainFrame)
 
     function window:AddTab(name)
@@ -229,7 +212,6 @@ function Flera:CreateWindow(options)
             tabFrame.Visible = true
         end)
 
-        -- Add Button Function
         function tab:AddButton(text, callback)
             local button = CreateInstance("TextButton", {
                 Text = text,
@@ -246,7 +228,6 @@ function Flera:CreateWindow(options)
             button.MouseButton1Click:Connect(callback)
         end
 
-        -- Add Slider Function
         function tab:AddSlider(text, options)
             local slider = CreateInstance("Frame", {
                 Size = UDim2.new(0.9, 0, 0, 50),
