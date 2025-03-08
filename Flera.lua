@@ -1,4 +1,4 @@
--- Flera UI Library (Fade Animations, Required Script Name, Key System, Rounded Corners, Draggable, Minify/Close Buttons)
+-- Flera UI Library (Full Code)
 local Flera = {}
 
 -- Services
