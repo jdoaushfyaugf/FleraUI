@@ -1,4 +1,4 @@
--- Flera UI Library (Full Code)
+-- Flera UI Library (Universal Compatibility)
 local Flera = {}
 
 -- Services
@@ -21,24 +21,6 @@ local function ApplyRoundCorners(instance, cornerRadius)
         CornerRadius = UDim.new(cornerRadius, 0),
         Parent = instance
     })
-end
-
--- Key System
-local function FetchKeyFromPastebin(url)
-    local success, key = pcall(function()
-        return HttpService:GetAsync(url)
-    end)
-    return success and key or nil
-end
-
-local function ValidateKey(inputKey, validKey)
-    return inputKey == validKey
-end
-
--- Required Script Name Check
-local function CheckScriptName(requiredName)
-    local scriptName = debug.info(1, "n")
-    return scriptName == requiredName
 end
 
 -- Fade Animation
@@ -71,28 +53,6 @@ function Flera:CreateWindow(options)
     local imageId = options.ImageId
     local keyEnabled = options.KeyEnabled or false
     local keyUrl = options.KeyUrl or ""
-    local requiredScriptName = options.RequiredScriptName or ""
-
-    -- Check Required Script Name
-    if requiredScriptName ~= "" and not CheckScriptName(requiredScriptName) then
-        warn("Access denied. This script is only for: " .. requiredScriptName)
-        return
-    end
-
-    -- Key System
-    if keyEnabled then
-        local validKey = FetchKeyFromPastebin(keyUrl)
-        if not validKey then
-            warn("Failed to fetch key from Pastebin.")
-            return
-        end
-
-        local inputKey = game:GetService("TextService"):Prompt("Enter Key", "Please enter the key to access the UI.")
-        if not ValidateKey(inputKey, validKey) then
-            warn("Invalid key. Access denied.")
-            return
-        end
-    end
 
     -- Create ScreenGui
     local screenGui = CreateInstance("ScreenGui", {
