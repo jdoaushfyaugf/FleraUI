@@ -1,4 +1,4 @@
--- Flera UI Library (Universal Compatibility)
+-- Flera UI Library (eeeUniversal Compatibility)
 local Flera = {}
 
 -- Services
