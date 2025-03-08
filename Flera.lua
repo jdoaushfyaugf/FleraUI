@@ -8,14 +8,11 @@ local RunService = game:GetService("RunService")
 
 -- Safe GUI Creation for Executors
 local function CreateScreenGui()
-    if gethui then
-        return gethui() -- For executors that support gethui()
-    else
-        local gui = Instance.new("ScreenGui")
-        gui.ResetOnSpawn = false
-        gui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
-        return gui
-    end
+    local gui = Instance.new("ScreenGui")
+    gui.ResetOnSpawn = false
+    gui.Enabled = true
+    gui.Parent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")
+    return gui
 end
 
 -- Utility Functions
@@ -28,7 +25,7 @@ local function CreateInstance(className, properties)
 end
 
 local function ApplyRoundCorners(instance, cornerRadius)
-    local corner = CreateInstance("UICorner", {
+    CreateInstance("UICorner", {
         CornerRadius = UDim.new(cornerRadius, 0),
         Parent = instance
     })
@@ -68,8 +65,8 @@ function Flera:CreateWindow(options)
         Position = UDim2.new(0.5, -200, 0.5, -250),
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-        BackgroundTransparency = 1,
-        Visible = false,
+        BackgroundTransparency = 0.2,
+        Visible = true,
         Parent = screenGui
     })
     ApplyRoundCorners(mainFrame, 0.1)
@@ -78,7 +75,6 @@ function Flera:CreateWindow(options)
     local titleBar = CreateInstance("Frame", {
         Size = UDim2.new(1, 0, 0, 30),
         BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-        BackgroundTransparency = 1,
         Parent = mainFrame
     })
     ApplyRoundCorners(titleBar, 0.1)
@@ -107,27 +103,6 @@ function Flera:CreateWindow(options)
     })
     ApplyRoundCorners(closeButton, 0.5)
 
-    -- Draggable Window
-    local dragging, dragStart, startPos
-    titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = mainFrame.Position
-        end
-    end)
-    titleBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
     -- Close UI Functionality
     closeButton.MouseButton1Click:Connect(function()
         FadeOut(mainFrame, function()
@@ -138,12 +113,14 @@ function Flera:CreateWindow(options)
     -- Show UI with Left Shift
     UserInputService.InputBegan:Connect(function(input)
         if input.KeyCode == Enum.KeyCode.LeftShift then
-            screenGui.Enabled = true
-            FadeIn(mainFrame)
+            screenGui.Enabled = not screenGui.Enabled
+            if screenGui.Enabled then
+                FadeIn(mainFrame)
+            end
         end
     end)
 
-    -- Initial Fade In
+    -- Ensure UI is visible
     FadeIn(mainFrame)
 
     function window:AddTab(name)
